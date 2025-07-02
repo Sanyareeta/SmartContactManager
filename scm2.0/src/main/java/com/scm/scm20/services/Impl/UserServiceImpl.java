@@ -2,12 +2,15 @@ package com.scm.scm20.services.Impl;
 
 
 import com.scm.scm20.entities.User;
+import com.scm.scm20.helper.AppConstants;
 import com.scm.scm20.repositories.UserRepo;
 import com.scm.scm20.services.UserService;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,12 +21,16 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepo userRepo;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     private ModelMapper modelMapper;
     private Logger logger= LoggerFactory.getLogger(this.getClass());
     @Override
     public User saveUser(User user) {
         String id=UUID.randomUUID().toString();
         user.setUserId(id);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRoleList(List.of(AppConstants.ROLE_USER));
         return userRepo.save(user);
 
     }
@@ -54,7 +61,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean isUserExistForEmail(String emailid, String id) {
-        return userRepo.findByEmail(emailid);
+        User user= userRepo.findByEmail(emailid).orElseThrow(()-> new UsernameNotFoundException("User not found with this email"));
+        return user != null ? true : false;
     }
 
     @Override
