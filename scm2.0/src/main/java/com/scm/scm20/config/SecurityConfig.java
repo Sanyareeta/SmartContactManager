@@ -6,15 +6,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -30,6 +25,14 @@ public class SecurityConfig {
 //    }
     @Autowired
    private SecurityUserDetailService userDetailService;
+
+    @Autowired
+    private CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
+
+    @Autowired
+    private CustomAuthenticationFailureHandler handler;
+
+
     @Bean
     public AuthenticationProvider authenticationProvider(){
         DaoAuthenticationProvider daoAuthenticationProvider=new DaoAuthenticationProvider();
@@ -47,7 +50,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(authorize->{
 //            authorize.requestMatchers("/home").permitAll();
-             authorize.requestMatchers("/user/**").authenticated();
+             authorize.requestMatchers("/user/**")
+            .authenticated();
              authorize.anyRequest().permitAll();
         });
         httpSecurity.formLogin(formLogin->{
@@ -59,6 +63,18 @@ public class SecurityConfig {
                 .passwordParameter("password");
 
         });
+
+
+        httpSecurity.oauth2Login(oauth2 -> {
+            oauth2
+                    .failureHandler((request, response, exception) -> {
+                        request.getSession().setAttribute("error.message", exception.getMessage());
+                        handler.onAuthenticationFailure(request, response, exception);
+                    })
+                    .loginPage("/login")
+                    .successHandler(customOAuth2SuccessHandler);
+        });
+
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
         httpSecurity.logout(logoutForm->{
             logoutForm.logoutUrl("/logout");

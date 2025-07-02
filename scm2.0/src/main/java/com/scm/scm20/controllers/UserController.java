@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
+
 @Controller
 @RequestMapping("/user")
 public class UserController {
@@ -15,7 +17,8 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public String userProfile(){
+    public String userProfile(Principal principal){
+        String name=principal.getName();
         return "user/profile";
     }
 
