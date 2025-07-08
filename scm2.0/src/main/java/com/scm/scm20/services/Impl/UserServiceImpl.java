@@ -70,4 +70,9 @@ public class UserServiceImpl implements UserService {
         List<User> users=userRepo.findAll();
         return users;
     }
+
+    @Override
+    public User getUserByEmail(String email) {
+        return userRepo.findByEmail(email).orElse(null);
+    }
 }

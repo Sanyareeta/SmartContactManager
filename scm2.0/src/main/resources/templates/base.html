@@ -18,7 +18,14 @@
     <th:block data-th-replace="${script}"></th:block>
 </head>
 <body class=" dark:bg-gray-900 dark:text-white">
+<div th:if="${loggedInUser}">
+    <div th:replace="~{user/user_navbar::user_navbar}"></div>
+</div>
+<!--<div style="border: 2px solid red;">This is user navbar</div>-->
+
+<div th:unless="${loggedInUser}">
 <div th:replace="~{navbar :: navbar}"></div>
+</div>
 <div class="pt-20 p-4">
 <section data-th-replace="${content}"></section>
 </div>
